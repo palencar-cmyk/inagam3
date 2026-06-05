@@ -1,278 +1,266 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import os
+import base64
 
-# Configuração da página para o jogo ocupar a tela direitinho
-st.set_page_config(page_title="Ina Game", layout="centered")
+# Configuração da página para o jogo ocupar o espaço correto
+st.set_page_config(page_title="Ina Bros Game", layout="centered")
 
-# Ocultar menus padrões do Streamlit para parecer um app nativo
-hide_style = """
+# Ocultar cabeçalhos e menus do Streamlit
+st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    div.block-container {padding-top: 2rem;}
     </style>
-"""
-st.markdown(hide_style, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-# Bloco do Jogo em HTML5 / JavaScript
-game_html = """
+# Função inteligente para converter as imagens locais do seu GitHub em formato legível pelo HTML
+def get_image_base64(file_name):
+    if os.path.exists(file_name):
+        with open(file_name, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+            return f"data:image/png;base64,{encoded_string}"
+    return ""
+
+# Carregando as suas imagens direto da pasta do repositório
+img_capa = get_image_base64("Capa.png")
+img_cenario = get_image_base64("Cenário 1.png")
+
+# --- CÓDIGO DO JOGO EM ESTILO MARIO BROS (PLATAFORMA) ---
+game_html = f"""
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <style>
-        body {
+        body {{
             margin: 0;
             padding: 0;
-            background-color: #111;
-            color: #fff;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #222;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
-        }
-        #game-container {
+            font-family: 'Arial', sans-serif;
+        }}
+        #game-container {{
             width: 800px;
             height: 600px;
-            background-color: #000;
+            background-color: #5c94fc; /* Azul céu padrão do Mario */
             position: relative;
-            border: 4px solid #333;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
-        .screen {
+            border: 4px solid #fff;
+            overflow: hidden;
+        }}
+        .screen {{
             width: 100%;
             height: 100%;
             position: absolute;
             top: 0;
             left: 0;
             display: none;
-            background-size: cover;
-            background-position: center;
-        }
-        .active {
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+        }}
+        .active {{
             display: block;
-        }
-        /* Estilos do Menu */
-        #menu-screen {
-            background-image: url('Capa.png');
-            text-align: center;
-        }
-        .btn-game {
-            padding: 12px 24px;
-            font-size: 18px;
-            cursor: pointer;
-            background-color: #8b0000;
-            color: white;
-            border: 2px solid #fff;
-            font-family: 'Courier New', monospace;
+        }}
+        
+        /* Tela de Menu com a sua Capa.png */
+        #menu-screen {{
+            background-image: url('{img_capa}');
+            background-color: #000;
+        }}
+        #start-btn {{
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 40px;
+            font-size: 22px;
             font-weight: bold;
-            transition: 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-        }
-        .btn-game:hover {
-            background-color: #ff0000;
-            transform: scale(1.05);
-        }
-        #start-btn {
-            position: absolute;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        /* Caixa de Diálogo */
-        .dialogue-box {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 740px;
-            height: 140px;
-            background: rgba(0, 0, 0, 0.85);
-            border: 3px solid #8b0000;
-            border-radius: 8px;
-            padding: 15px;
-            box-sizing: border-box;
-        }
-        .dialogue-text {
-            font-size: 18px;
-            line-height: 1.4;
-            margin-bottom: 10px;
-        }
-        .options-container {
-            display: flex;
-            gap: 10px;
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-        }
-        .btn-option {
-            background: #222;
-            color: #fff;
-            border: 1px solid #8b0000;
-            padding: 6px 12px;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-        }
-        .btn-option:hover {
-            background: #8b0000;
-        }
+            background-color: #e52521; /* Vermelho Mario */
+            color: white;
+            border: 3px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 5px 0 #a31411;
+        }}
+        #start-btn:active {{
+            transform: translate(-50%, 4px);
+            box-shadow: 0 1px 0 #a31411;
+        }}
+
+        /* Tela de Jogo com o seu Cenário 1.png */
+        #game-screen {{
+            background-image: url('{img_cenario}');
+        }}
+
+        /* Personagem (Estilo Bloco do Mario) */
+        #player {{
+            width: 40px;
+            height: 60px;
+            background-color: #e52521;
+            border: 2px solid #000;
+            position: absolute;
+            bottom: 60px; /* Acima do chão */
+            left: 100px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }}
+
+        /* Chão Falso do Jogo */
+        #floor {{
+            width: 100%;
+            height: 60px;
+            background-color: #73c740; /* Verde grama */
+            border-top: 4px solid #4da22b;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }}
+
+        /* Plataforma para Pular */
+        .platform {{
+            width: 150px;
+            height: 30px;
+            background-color: #fcb443; /* Bloco de tijolo amarelo */
+            border: 3px solid #6b4000;
+            position: absolute;
+            bottom: 220px;
+            left: 350px;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            color: #6b4000;
+        }}
+
+        /* Botões de controle na tela */
+        .controls-container {{
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 8px;
+        }}
+        .control-btn {{
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #fff;
+            border: 2px solid #000;
+            cursor: pointer;
+            border-radius: 5px;
+        }}
+        .control-btn:active {{
+            background: #ddd;
+        }}
     </style>
 </head>
 <body>
 
     <div id="game-container">
         <div id="menu-screen" class="screen active">
-            <button id="start-btn" class="btn-game" onclick="startGame()">INICIAR JOGO</button>
+            <button id="start-btn" onclick="startGame()">JOGAR</button>
         </div>
 
         <div id="game-screen" class="screen">
-            <div class="dialogue-box">
-                <div id="text-box" class="dialogue-text">Carregando história...</div>
-                <div id="options" class="options-container"></div>
+            <div class="controls-container">
+                <button class="control-btn" onclick="movePlayer(-30)">⬅️ CORRER ESQ</button>
+                <button class="control-btn" onclick="jumpPlayer()">⬆️ PULAR</button>
+                <button class="control-btn" onclick="movePlayer(30)">CORRER DIR ➡️</button>
             </div>
+
+            <div id="player"></div>
+            <div class="platform">BLOCO</div>
+            <div id="floor"></div>
         </div>
     </div>
 
     <script>
-        // Sons usando a Web Audio API nativa (Beeps Estilo Retro de 8-bits)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let playerX = 100;
+        let playerY = 60; // Altura em relação à base do container (sobre o chão)
+        let isJumping = false;
+        const player = document.getElementById('player');
 
-        function playBeep(type, frequency, duration) {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
+        function startGame() {{
+            document.getElementById('menu-screen').classList.remove('active');
+            document.getElementById('game-screen').classList.add('active');
+        }}
 
-            oscillator.type = type; // 'sine', 'square', 'sawtooth', 'triangle'
-            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+        function movePlayer(offset) {{
+            playerX += offset;
+            // Impede o boneco de sair das bordas da tela
+            if (playerX < 0) playerX = 0;
+            if (playerX > 760) playerX = 760;
+            player.style.left = playerX + 'px';
             
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            // Checagem simples se caiu ou subiu na plataforma
+            checkPlatform();
+        }}
 
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
+        function jumpPlayer() {{
+            if (isJumping) return;
+            isJumping = true;
+            
+            let baseFloor = playerY; 
+            let targetHeight = baseFloor + 160;
 
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + duration);
-        }
+            // Subida do pulo
+            let upInterval = setInterval(() => {{
+                playerY += 8;
+                player.style.bottom = playerY + 'px';
+                
+                if (playerY >= targetHeight) {{
+                    clearInterval(upInterval);
+                    
+                    // Queda da gravidade
+                    let downInterval = setInterval(() => {{
+                        playerY -= 8;
+                        player.style.bottom = playerY + 'px';
+                        
+                        // Checa pouso no Bloco do meio do caminho
+                        if (playerX >= 310 && playerX <= 480 && playerY <= 250 && playerY >= 240) {{
+                            clearInterval(downInterval);
+                            playerY = 250; // Fica em cima do bloco
+                            player.style.bottom = playerY + 'px';
+                            isJumping = false;
+                        }}
+                        // Se voltar pro chão normal
+                        else if (playerY <= 60) {{
+                            clearInterval(downInterval);
+                            playerY = 60;
+                            player.style.bottom = playerY + 'px';
+                            isJumping = false;
+                        }}
+                    }}, 15);
+                }}
+            }}, 15);
+        }}
 
-        function playTextSound() {
-            playBeep('sine', 300, 0.05);
-        }
-
-        function playCombatSound() {
-            // Efeito Tchim Tchim de lâminas se batendo
-            playBeep('sawtooth', 800, 0.08);
-            setTimeout(() => playBeep('sawtooth', 1200, 0.1), 80);
-        }
-
-        // Variáveis de Estado do Jogo
-        let currentStage = "intro";
-        const gameScreen = document.getElementById('game-screen');
-        const menuScreen = document.getElementById('menu-screen');
-        const textBox = document.getElementById('text-box');
-        const optionsBox = document.getElementById('options');
-
-        const story = {
-            intro: {
-                text: "Você acorda sob uma névoa densa. À sua frente está a entrada de uma masmorra gótica esquecida pelo tempo. Um frio cortante atravessa sua espinha.",
-                bg: "Cenário 1.png",
-                sound: "text",
-                options: [
-                    { text: "Entrar na masmorra", next: "sala_principal" },
-                    { text: "Olhar ao redor", next: "olhar_redor" }
-                ]
-            },
-            olhar_redor: {
-                text: "Rachaduras no chão revelam raízes escuras e runas antigas entalhadas na pedra que brilham fracamente em um tom carmesim. Não há escapatória além da porta.",
-                bg: "Cenário 1.png",
-                sound: "text",
-                options: [
-                    { text: "Dar um passo à frente e entrar", next: "sala_principal" }
-                ]
-            },
-            sala_principal: {
-                text: "Lá dentro, tochas se acendem sozinhas com chamas azuis. No centro do salão, duas figuras esqueléticas guardam um baú acorrentado.",
-                bg: "Cenário 2.png",
-                sound: "text",
-                options: [
-                    { text: "Sacar sua adaga e atacar", next: "combate" },
-                    { text: "Tentar passar furtivamente", next: "furtivo" }
-                ]
-            },
-            combate: {
-                text: "Com um movimento rápido, você avança! O som de metal contra os ossos ecoa pelas paredes de pedra! *TCHIM! TCHIM!*",
-                bg: "Cenário 3.png",
-                sound: "combat",
-                options: [
-                    { text: "Continuar golpeando", next: "vitoria" }
-                ]
-            },
-            furtivo: {
-                text: "Você pisa em falso em um osso seco. O estalo reverbera pelo salão vazio e os esqueletos viram suas órbitas vazias em sua direção de forma ameaçadora!",
-                bg: "Cenário 2.png",
-                sound: "text",
-                options: [
-                    { text: "Não há escolha: Lutar!", next: "combate" }
-                ]
-            },
-            vitoria: {
-                text: "Os esqueletos se desfazem em poeira de ossos. O baú se abre revelando a relíquia perdida que você buscou por eras. Você venceu o desafio das sombras!",
-                bg: "Cenário 4.png",
-                sound: "text",
-                options: [
-                    { text: "Voltar ao Menu", next: "menu" }
-                ]
-            }
-        };
-
-        function startGame() {
-            menuScreen.classList.remove('active');
-            gameScreen.classList.add('active');
-            goToStage("intro");
-        }
-
-        function goToStage(stageKey) {
-            if (stageKey === "menu") {
-                gameScreen.classList.remove('active');
-                menuScreen.classList.add('active');
-                return;
-            }
-
-            currentStage = stageKey;
-            const stage = story[stageKey];
-
-            // Troca o plano de fundo dinamicamente
-            gameScreen.style.backgroundImage = `url('${stage.bg}')`;
-
-            // Executa os beeps retro correspondentes à ação
-            if (stage.sound === "combat") {
-                playCombatSound();
-            } else {
-                playTextSound();
-            }
-
-            // Exibe o texto
-            textBox.innerText = stage.text;
-
-            // Renderiza os botões de escolha
-            optionsBox.innerHTML = "";
-            stage.options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = "btn-option";
-                btn.innerText = opt.text;
-                btn.onclick = () => goToStage(opt.next);
-                optionsBox.appendChild(btn);
-            });
-        }
+        function checkPlatform() {{
+            // Se o boneco andar para fora do Bloco Amarelo, ele cai de volta pro chão
+            if (playerY === 250 && (playerX < 310 || playerX > 480)) {{
+                let fallInterval = setInterval(() => {{
+                    playerY -= 8;
+                    player.style.bottom = playerY + 'px';
+                    if (playerY <= 60) {{
+                        clearInterval(fallInterval);
+                        playerY = 60;
+                        player.style.bottom = playerY + 'px';
+                    }}
+                }}, 15);
+            }}
+        }}
     </script>
 </body>
 </html>
 """
 
-# Renderiza o componente HTML em tela cheia na interface do Streamlit
+# Inicializa o componente de exibição do jogo
 components.html(game_html, width=800, height=600)
