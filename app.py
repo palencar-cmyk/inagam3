@@ -1,259 +1,278 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import base64
-import os
 
-# Configuração da página do Streamlit
-st.set_page_config(
-    page_title="Ina@game",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
+# Configuração da página para o jogo ocupar a tela direitinho
+st.set_page_config(page_title="Ina Game", layout="centered")
 
-# Remover margens e elementos padrões do Streamlit
-st.markdown("""
+# Ocultar menus padrões do Streamlit para parecer um app nativo
+hide_style = """
     <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        .block-container {padding: 0rem;}
-        iframe {display: block; margin: auto;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(hide_style, unsafe_allow_html=True)
 
-# Função para codificar as imagens em Base64
-def carregar_imagem_base64(nome_arquivo, extensao="png"):
-    if os.path.exists(nome_arquivo):
-        with open(nome_arquivo, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-            mime = "jpeg" if extensao.lower() in ["jpg", "jpeg"] else "png"
-            return f"data:image/{mime};base64,{encoded_string}"
-    return ""
-
-# Convertendo as imagens locais
-capa_uri = carregar_imagem_base64("Capa.png")
-cenario1_uri = carregar_imagem_base64("Cenário 1.png")
-cenario2_uri = carregar_imagem_base64("Cenário 2.png")
-cenario3_uri = carregar_imagem_base64("Cenário 3.png")
-cenario4_uri = carregar_imagem_base64("Cenário 4.png")
-personagens_uri = carregar_imagem_base64("Personagens.png")
-knife_uri = carregar_imagem_base64("knife.jpg", "jpg")
-skel1_uri = carregar_imagem_base64("skeleton.jpg", "jpg")
-skel2_uri = carregar_imagem_base64("skeleton2.jpg", "jpg")
-weed_uri = carregar_imagem_base64("weed.jpg", "jpg")
-vinho_svg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23722F37"><path d="M12 2v4c.55 0 1 .45 1 1v2.59l4 4V22H7v-8.41l4-4V7c0-.55.45-1 1-1V2h2zm2 14H10v4h4v-4z"/></svg>'
-
-game_html = f"""
+# Bloco do Jogo em HTML5 / JavaScript
+game_html = """
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ina@game</title>
     <style>
-        * {{
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
+        body {
             margin: 0;
             padding: 0;
-        }}
-        body, html {{
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #0d0d0d;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #e0e0e0;
-        }}
-        #game-container {{
-            position: relative;
-            width: 100vw;
+            background-color: #111;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
-            max-width: 854px;
-            max-height: 480px;
-            margin: auto;
             overflow: hidden;
-            background-color: #1a1a1a;
-        }}
-        .screen {{
-            position: absolute;
+        }
+        #game-container {
+            width: 800px;
+            height: 600px;
+            background-color: #000;
+            position: relative;
+            border: 4px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        .screen {
             width: 100%;
             height: 100%;
+            position: absolute;
             top: 0;
             left: 0;
             display: none;
-            background-size: 100% 100%;
+            background-size: cover;
             background-position: center;
-            z-index: 10;
-        }}
-        #screen-start {{
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-image: url('{capa_uri}');
-            background-color: #0a0a0a;
-        }}
-        #screen-start h1 {{
-            font-size: 3rem;
-            color: #8b0000;
-            text-shadow: 0 0 10px #000, 2px 2px 4px #000;
-            margin-bottom: 30px;
-            letter-spacing: 4px;
-        }}
-        .btn {{
-            padding: 12px 35px;
-            font-size: 1.2rem;
-            background: linear-gradient(135deg, #4a0000, #1a0000);
-            color: #fff;
-            border: 2px solid #8b0000;
-            border-radius: 5px;
+        }
+        .active {
+            display: block;
+        }
+        /* Estilos do Menu */
+        #menu-screen {
+            background-image: url('Capa.png');
+            text-align: center;
+        }
+        .btn-game {
+            padding: 12px 24px;
+            font-size: 18px;
             cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }}
-        #screen-game {{ background-image: url('{cenario1_uri}'); }}
-        #hud {{
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-        }}
-        #hearts {{ display: flex; gap: 5px; }}
-        .heart {{ font-size: 24px; color: #ff0033; text-shadow: 0 0 5px #000; }}
-        #score-board {{
-            background: rgba(0, 0, 0, 0.7);
-            padding: 5px 15px;
-            border-radius: 15px;
-            border: 1px solid #444;
-            font-size: 1rem;
+            background-color: #8b0000;
+            color: white;
+            border: 2px solid #fff;
+            font-family: 'Courier New', monospace;
             font-weight: bold;
-        }}
-        #boss-hud {{
-            display: none;
+            transition: 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+        .btn-game:hover {
+            background-color: #ff0000;
+            transform: scale(1.05);
+        }
+        #start-btn {
             position: absolute;
-            top: 50px;
+            bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
-            width: 60%;
-            background: rgba(0,0,0,0.8);
-            padding: 5px;
-            border-radius: 5px;
-            border: 1px solid #ff0000;
-            z-index: 100;
-            text-align: center;
-        }}
-        #boss-hearts {{ display: flex; justify-content: center; gap: 5px; }}
-        .boss-heart {{ font-size: 18px; color: #00ff66; }}
-        #game-world {{ position: relative; width: 100%; height: 100%; }}
-        .character-group {{
+        }
+        /* Caixa de Diálogo */
+        .dialogue-box {
             position: absolute;
-            bottom: 60px;
-            left: 50px;
-            height: 100px;
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-        }}
-        .char-sprite {{
-            width: 60px;
-            height: 85px;
-            background-image: url('{personagens_uri}');
-            background-size: 300% 100%;
-            background-repeat: no-repeat;
-        }}
-        #inara {{ background-position: 0% center; }}
-        #queen {{ display: none; background-position: 50% center; }}
-        #herr {{ display: none; background-position: 100% center; }}
-        .enemy {{
-            position: absolute;
-            bottom: 60px;
-            width: 60px;
-            height: 85px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: bottom;
-        }}
-        .boss {{
-            position: absolute;
-            bottom: 60px;
-            right: 40px;
-            width: 110px;
-            height: 130px;
-            background-image: url('{personagens_uri}');
-            background-position: 0% center;
-            filter: hue-rotate(140deg) brightness(0.6);
-            background-size: 300% 100%;
-            background-repeat: no-repeat;
-            display: none;
-        }}
-        .projectile {{
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }}
-        .boss-projectile {{
-            position: absolute;
-            font-family: 'Comic Sans MS', 'Comic Sans', sans-serif;
-            color: #00ff33;
-            font-weight: bold;
-            white-space: nowrap;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 740px;
+            height: 140px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 3px solid #8b0000;
+            border-radius: 8px;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .dialogue-text {
             font-size: 18px;
-            text-shadow: 1px 1px 2px #000;
-        }}
-        #controls {{
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        .options-container {
+            display: flex;
+            gap: 10px;
             position: absolute;
             bottom: 15px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 30px;
-            z-index: 150;
-        }}
-        .control-btn {{
-            width: 75px;
-            height: 75px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #8b0000;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            right: 15px;
+        }
+        .btn-option {
+            background: #222;
             color: #fff;
-            font-size: 2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
-        }}
-        .control-btn:active {{ background: rgba(139, 0, 0, 0.8); }}
-        #screen-end {{
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: #000;
-            z-index: 200;
-        }}
-        #end-title {{ font-size: 4rem; color: #00ff66; margin-bottom: 20px; }}
+            border: 1px solid #8b0000;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .btn-option:hover {
+            background: #8b0000;
+        }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <div id="screen-start" class="screen" style="display: flex;">
-            <h1>Ina@game</h1>
-            <button class="btn" id="btn-start">Iniciar</button>
+        <div id="menu-screen" class="screen active">
+            <button id="start-btn" class="btn-game" onclick="startGame()">INICIAR JOGO</button>
         </div>
 
-        <div id="screen-game" class="screen">
-            <div id="hud">
-                <div id="hearts"></div>
-                <div id="score-board">Inimigos: <span id="score-val">
+        <div id="game-screen" class="screen">
+            <div class="dialogue-box">
+                <div id="text-box" class="dialogue-text">Carregando história...</div>
+                <div id="options" class="options-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sons usando a Web Audio API nativa (Beeps Estilo Retro de 8-bits)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playBeep(type, frequency, duration) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = type; // 'sine', 'square', 'sawtooth', 'triangle'
+            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function playTextSound() {
+            playBeep('sine', 300, 0.05);
+        }
+
+        function playCombatSound() {
+            // Efeito Tchim Tchim de lâminas se batendo
+            playBeep('sawtooth', 800, 0.08);
+            setTimeout(() => playBeep('sawtooth', 1200, 0.1), 80);
+        }
+
+        // Variáveis de Estado do Jogo
+        let currentStage = "intro";
+        const gameScreen = document.getElementById('game-screen');
+        const menuScreen = document.getElementById('menu-screen');
+        const textBox = document.getElementById('text-box');
+        const optionsBox = document.getElementById('options');
+
+        const story = {
+            intro: {
+                text: "Você acorda sob uma névoa densa. À sua frente está a entrada de uma masmorra gótica esquecida pelo tempo. Um frio cortante atravessa sua espinha.",
+                bg: "Cenário 1.png",
+                sound: "text",
+                options: [
+                    { text: "Entrar na masmorra", next: "sala_principal" },
+                    { text: "Olhar ao redor", next: "olhar_redor" }
+                ]
+            },
+            olhar_redor: {
+                text: "Rachaduras no chão revelam raízes escuras e runas antigas entalhadas na pedra que brilham fracamente em um tom carmesim. Não há escapatória além da porta.",
+                bg: "Cenário 1.png",
+                sound: "text",
+                options: [
+                    { text: "Dar um passo à frente e entrar", next: "sala_principal" }
+                ]
+            },
+            sala_principal: {
+                text: "Lá dentro, tochas se acendem sozinhas com chamas azuis. No centro do salão, duas figuras esqueléticas guardam um baú acorrentado.",
+                bg: "Cenário 2.png",
+                sound: "text",
+                options: [
+                    { text: "Sacar sua adaga e atacar", next: "combate" },
+                    { text: "Tentar passar furtivamente", next: "furtivo" }
+                ]
+            },
+            combate: {
+                text: "Com um movimento rápido, você avança! O som de metal contra os ossos ecoa pelas paredes de pedra! *TCHIM! TCHIM!*",
+                bg: "Cenário 3.png",
+                sound: "combat",
+                options: [
+                    { text: "Continuar golpeando", next: "vitoria" }
+                ]
+            },
+            furtivo: {
+                text: "Você pisa em falso em um osso seco. O estalo reverbera pelo salão vazio e os esqueletos viram suas órbitas vazias em sua direção de forma ameaçadora!",
+                bg: "Cenário 2.png",
+                sound: "text",
+                options: [
+                    { text: "Não há escolha: Lutar!", next: "combate" }
+                ]
+            },
+            vitoria: {
+                text: "Os esqueletos se desfazem em poeira de ossos. O baú se abre revelando a relíquia perdida que você buscou por eras. Você venceu o desafio das sombras!",
+                bg: "Cenário 4.png",
+                sound: "text",
+                options: [
+                    { text: "Voltar ao Menu", next: "menu" }
+                ]
+            }
+        };
+
+        function startGame() {
+            menuScreen.classList.remove('active');
+            gameScreen.classList.add('active');
+            goToStage("intro");
+        }
+
+        function goToStage(stageKey) {
+            if (stageKey === "menu") {
+                gameScreen.classList.remove('active');
+                menuScreen.classList.add('active');
+                return;
+            }
+
+            currentStage = stageKey;
+            const stage = story[stageKey];
+
+            // Troca o plano de fundo dinamicamente
+            gameScreen.style.backgroundImage = `url('${stage.bg}')`;
+
+            // Executa os beeps retro correspondentes à ação
+            if (stage.sound === "combat") {
+                playCombatSound();
+            } else {
+                playTextSound();
+            }
+
+            // Exibe o texto
+            textBox.innerText = stage.text;
+
+            // Renderiza os botões de escolha
+            optionsBox.innerHTML = "";
+            stage.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "btn-option";
+                btn.innerText = opt.text;
+                btn.onclick = () => goToStage(opt.next);
+                optionsBox.appendChild(btn);
+            });
+        }
+    </script>
+</body>
+</html>
+"""
+
+# Renderiza o componente HTML em tela cheia na interface do Streamlit
+components.html(game_html, width=800, height=600)
