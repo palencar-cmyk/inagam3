@@ -6,17 +6,18 @@ import base64
 # Configuração da página para o jogo
 st.set_page_config(page_title="Ina Bros Game", layout="centered")
 
-# Ocultar elementos do Streamlit
+# Ocultar menus padrões do Streamlit
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    div.block-container {padding-top: 2rem;}
+    div.block-container {padding-top: 1rem;}
+    body {background-color: #111;}
     </style>
 """, unsafe_allow_html=True)
 
-# Função para converter imagens locais para Base64 (resolve o fundo preto)
+# Função para converter imagens locais para Base64
 def carregar_imagem_base64(nome_arquivo):
     if os.path.exists(nome_arquivo):
         with open(nome_arquivo, "rb") as f:
@@ -28,158 +29,68 @@ def carregar_imagem_base64(nome_arquivo):
 img_capa = carregar_imagem_base64("Capa.png")
 img_cenario = carregar_imagem_base64("Cenário 1.png")
 
-# Construção do HTML do Jogo de Plataforma (Estilo Mario)
-game_html = """
+# Construção do HTML com design Gótico e botões estilizados
+game_html = f"""
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&family=Cinzel+Decorative:wght@700&family=MedievalSharp&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            margin: 0; padding: 0; background-color: #222;
+        body {{
+            margin: 0; padding: 0; background-color: #111;
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden; font-family: Arial, sans-serif;
-        }
-        #game-container {
-            width: 800px; height: 600px; background-color: #5c94fc;
-            position: relative; border: 4px solid #fff; overflow: hidden;
-        }
-        .screen {
+            height: 100vh; overflow: hidden;
+            font-family: 'MedievalSharp', cursive;
+        }}
+        #game-container {{
+            width: 800px; height: 600px; background-color: #0d0d0d;
+            position: relative; border: 4px solid #3a0000; 
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+        }}
+        .screen {{
             width: 100%; height: 100%; position: absolute;
             top: 0; left: 0; display: none; background-size: 100% 100%;
-        }
-        .active { display: block; }
+        }}
+        .active {{ display: block; }}
         
-        /* Menu */
-        #menu-screen {
-            background-image: url('""" + img_capa + """');
+        /* --- DESIGN DA TELA DE MENU --- */
+        #menu-screen {{
+            background-image: url('{img_capa}');
             background-color: #000;
-        }
-        #start-btn {
-            position: absolute; bottom: 60px; left: 50%;
-            transform: translateX(-50%); padding: 15px 40px;
-            font-size: 22px; font-weight: bold; cursor: pointer;
-            background-color: #e52521; color: white;
-            border: 3px solid #fff; border-radius: 8px;
-        }
-
-        /* Tela do Jogo */
-        #game-screen {
-            background-image: url('""" + img_cenario + """');
-        }
-        #player {
-            width: 40px; height: 60px; background-color: #e52521;
-            border: 2px solid #000; position: absolute;
-            bottom: 60px; left: 100px; border-radius: 4px;
-        }
-        #floor {
-            width: 100%; height: 60px; background-color: #73c740;
-            border-top: 4px solid #4da22b; position: absolute; bottom: 0; left: 0;
-        }
-        .platform {
-            width: 150px; height: 30px; background-color: #fcb443;
-            border: 3px solid #6b4000; position: absolute;
-            bottom: 220px; left: 350px; text-align: center;
-            line-height: 30px; font-weight: bold; color: #6b4000;
-        }
-
-        /* Controles */
-        .controls-container {
-            position: absolute; top: 20px; left: 20px;
-            display: flex; gap: 15px; background: rgba(0, 0, 0, 0.6);
-            padding: 10px; border-radius: 8px;
-        }
-        .control-btn {
-            padding: 10px 20px; font-size: 16px; font-weight: bold;
-            background: #fff; border: 2px solid #000; cursor: pointer; border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-
-    <div id="game-container">
-        <div id="menu-screen" class="screen active">
-            <button id="start-btn" onclick="startGame()">JOGAR</button>
-        </div>
-
-        <div id="game-screen" class="screen">
-            <div class="controls-container">
-                <button class="control-btn" onclick="movePlayer(-30)">⬅️ ESQ</button>
-                <button class="control-btn" onclick="jumpPlayer()">⬆️ PULAR</button>
-                <button class="control-btn" onclick="movePlayer(30)">DIR ➡️</button>
-            </div>
-            <div id="player"></div>
-            <div class="platform">TIJOLO</div>
-            <div id="floor"></div>
-        </div>
-    </div>
-
-    <script>
-        let playerX = 100;
-        let playerY = 60;
-        let isJumping = false;
-        const player = document.getElementById('player');
-
-        function startGame() {
-            document.getElementById('menu-screen').classList.remove('active');
-            document.getElementById('game-screen').classList.add('active');
-        }
-
-        function movePlayer(offset) {
-            playerX += offset;
-            if (playerX < 0) playerX = 0;
-            if (playerX > 760) playerX = 760;
-            player.style.left = playerX + 'px';
-            checkPlatform();
-        }
-
-        function jumpPlayer() {
-            if (isJumping) return;
-            isJumping = true;
-            let baseFloor = playerY;
-            let targetHeight = baseFloor + 160;
-
-            let upInterval = setInterval(() => {
-                playerY += 8;
-                player.style.bottom = playerY + 'px';
-                if (playerY >= targetHeight) {
-                    clearInterval(upInterval);
-                    let downInterval = setInterval(() => {
-                        playerY -= 8;
-                        player.style.bottom = playerY + 'px';
-                        
-                        if (playerX >= 310 && playerX <= 480 && playerY <= 250 && playerY >= 240) {
-                            clearInterval(downInterval);
-                            playerY = 250;
-                            player.style.bottom = playerY + 'px';
-                            isJumping = false;
-                        } else if (playerY <= 60) {
-                            clearInterval(downInterval);
-                            playerY = 60;
-                            player.style.bottom = playerY + 'px';
-                            isJumping = false;
-                        }
-                    }, 15);
-                }
-            }, 15);
-        }
-
-        function checkPlatform() {
-            if (playerY === 250 && (playerX < 310 || playerX > 480)) {
-                let fallInterval = setInterval(() => {
-                    playerY -= 8;
-                    player.style.bottom = playerY + 'px';
-                    if (playerY <= 60) {
-                        clearInterval(fallInterval);
-                        playerY = 60;
-                        player.style.bottom = playerY + 'px';
-                    }
-                }, 15);
-            }
-        }
-    </script>
-</body>
-</html>
-"""
-
-components.html(game_html, width=800, height=600)
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }}
+        
+        /* Título Gótico em cima da capa */
+        .game-title {{
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 56px;
+            color: #ff1a1a;
+            text-align: center;
+            text-shadow: 3px 3px 0px #000, 0 0 20px rgba(255, 0, 0, 0.8);
+            margin-top: -80px;
+            margin-bottom: 40px;
+            letter-spacing: 4px;
+        }}
+        
+        /* Botão JOGAR Estilizado */
+        #start-btn {{
+            padding: 15px 50px;
+            font-family: 'MedievalSharp', cursive;
+            font-size: 26px; font-weight: bold; cursor: pointer;
+            color: #fff; background: linear-gradient(135deg, #4a0000 0%, #1a0000 100%);
+            border: 2px solid #8b0000; border-radius: 4px;
+            box-shadow: 0 0 15px rgba(139, 0, 0, 0.6), inset 0 0 10px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 4px #000;
+            transition: all 0.3s ease;
+        }}
+        #start-btn:hover {{
+            background: linear
