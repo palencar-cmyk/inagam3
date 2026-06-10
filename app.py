@@ -5,7 +5,7 @@ import base64
 from PIL import Image
 from io import BytesIO
 
-st.set_page_config(page_title="Ina Bros Game", layout="centered")
+st.set_page_config(page_title="Ina Game", layout="centered")
 
 st.markdown("""
     <style>
@@ -13,7 +13,7 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     div.block-container {padding-top: 1rem;}
-    body {background-color: #111;}
+    body {background-color: #0a0a0a;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -23,72 +23,314 @@ def carregar_imagem_base64(nome_arquivo):
             img = Image.open(nome_arquivo)
             buffered = BytesIO()
             img.save(buffered, format="PNG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
-            return "data:image/png;base64," + img_str
+            return "data:image/png;base64," + base64.b64encode(buffered.getvalue()).decode()
         except Exception:
             return ""
     return ""
 
+# Carregamento de todos os assets solicitados
 img_capa = carregar_imagem_base64("Capa.png")
-img_cenario = carregar_imagem_base64("Cenário 1.png")
-img_player = carregar_imagem_base64("Personagem.png")
-img_inimigo = carregar_imagem_base64("Inimigo.png")
-img_boss = carregar_imagem_base64("Boss SF.png")
+img_cena1 = carregar_imagem_base64("Cenário 1.png")
+img_cena2 = carregar_imagem_base64("Cenário 2.png")
+img_inara = carregar_imagem_base64("inara.png")
+img_queen = carregar_imagem_base64("queenofbones.png")
+img_faca = carregar_imagem_base64("knife.jpg")
+img_folha = carregar_imagem_base64("weed.jpg")
+img_esqueleto = carregar_imagem_base64("skeleton.jpg")
 
-partes_html = [
-    "<!DOCTYPE html><html lang='pt-br'><head><meta charset='UTF-8'>",
-    "<link rel='preconnect' href='https://fonts.googleapis.com'>",
-    "<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>",
-    "<link href='https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=MedievalSharp&display=swap' rel='stylesheet'>",
-    "<style>",
-    "body { margin: 0; padding: 0; background-color: #111; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'MedievalSharp', cursive; user-select: none; }",
-    "#game-container { width: 800px; height: 600px; background-color: #0d0d0d; position: relative; border: 4px solid #3a0000; box-shadow: 0 0 30px rgba(139, 0, 0, 0.5); border-radius: 10px; overflow: hidden; }",
-    ".screen { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; background-size: cover; background-position: center; background-repeat: no-repeat; }",
-    ".active { display: block; }",
-    "#menu-screen { background-image: url('", img_capa, "'); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }",
-    ".menu-panel { background: rgba(0, 0, 0, 0.65); padding: 30px 50px; border-radius: 12px; border: 3px solid #8b0000; text-align: center; box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); z-index: 10; }",
-    ".game-title { font-family: 'Cinzel Decorative', serif; font-size: 52px; color: #ff1a1a; text-shadow: 3px 3px 0px #000, 0 0 25px rgba(255, 0, 0, 0.8); margin: 0 0 30px 0; letter-spacing: 4px; }",
-    "#start-btn { padding: 15px 50px; font-family: 'MedievalSharp', cursive; font-size: 26px; font-weight: bold; cursor: pointer; color: #fff; background: linear-gradient(135deg, #4a0000 0%, #1a0000 100%); border: 2px solid #8b0000; border-radius: 4px; box-shadow: 0 0 15px rgba(139, 0, 0, 0.6); text-shadow: 2px 2px 4px #000; transition: all 0.3s; }",
-    "#start-btn:hover { background: linear-gradient(135deg, #8b0000 0%, #4a0000 100%); border-color: #ff1a1a; box-shadow: 0 0 25px rgba(255, 26, 26, 0.8); transform: scale(1.05); }",
-    "#game-screen { background-image: url('", img_cenario, "'); }",
-    "#player { width: 65px; height: 95px; background-image: url('", img_player, "'); background-size: contain; background-repeat: no-repeat; background-position: bottom; position: absolute; bottom: 55px; left: 100px; z-index: 10; transition: filter 0.1s; }",
-    ".enemy { width: 60px; height: 90px; background-image: url('", img_inimigo, "'); background-size: contain; background-repeat: no-repeat; background-position: bottom; position: absolute; bottom: 55px; z-index: 5; }",
-    "#boss-sf { width: 140px; height: 190px; background-image: url('", img_boss, "'); background-size: contain; background-repeat: no-repeat; background-position: bottom; position: absolute; bottom: 55px; right: 50px; display: none; z-index: 6; filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.5)); }",
-    "#floor { width: 100%; height: 55px; background: transparent; position: absolute; bottom: 0; left: 0; }",
-    ".controls-container { position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; background: rgba(10, 10, 10, 0.85); padding: 10px; border-radius: 6px; border: 2px solid #3a0000; z-index: 100; }",
-    ".control-btn { padding: 10px 18px; font-family: 'MedievalSharp', cursive; font-size: 14px; font-weight: bold; color: #ccc; background: #1f1f1f; border: 1px solid #444; cursor: pointer; border-radius: 4px; transition: all 0.2s; }",
-    ".control-btn:hover { color: #fff; background: #2d2d2d; border-color: #8b0000; box-shadow: 0 0 8px rgba(139, 0, 0, 0.6); }",
-    ".attack-btn { background: linear-gradient(to bottom, #8b0000, #4a0000); color: #fff; border: 1px solid #ff1a1a; }",
-    ".attack-btn:hover { background: linear-gradient(to bottom, #ff1a1a, #8b0000); box-shadow: 0 0 12px rgba(255, 26, 26, 0.8); }",
-    "#stage-indicator { position: absolute; top: 20px; right: 20px; background: rgba(10, 10, 10, 0.85); padding: 10px 20px; border-radius: 6px; border: 2px solid #3a0000; color: #ff1a1a; font-size: 18px; font-weight: bold; letter-spacing: 2px; z-index: 100; }",
-    "</style></head><body>",
-    "<div id='game-container'>",
-    "<div id='menu-screen' class='screen active'><div class='menu-panel'><h1 class='game-title'>INA BROS</h1><button id='start-btn' onclick='startGame()'>INICIAR JOGO</button></div></div>",
-    "<div id='game-screen' class='screen'><div class='controls-container'><button class='control-btn' onclick='movePlayer(-30)'>⬅️ A / ESQ</button><button class='control-btn' onclick='jumpPlayer()'>⬆️ W / PULAR</button><button class='control-btn' onclick='movePlayer(30)'>DIR / D ➡️</button><button class='control-btn attack-btn' onclick='attackPlayer()'>⚔️ ESPAÇO / GOLPE</button></div>",
-    "<div id='stage-indicator'>FASE: 1</div><div id='player'></div><div id='enemies-container'></div><div id='boss-sf'></div><div id='floor'></div></div></div>",
-    "<script>",
-    "let playerX = 100; let playerY = 55; let isJumping = false; let isAttacking = false; let currentStage = 1; const totalStages = 3;",
-    "const player = document.getElementById('player'); const enemiesContainer = document.getElementById('enemies-container'); const bossSf = document.getElementById('boss-sf'); const stageIndicator = document.getElementById('stage-indicator');",
-    "let enemiesList = []; let gameLoopInterval;",
-    "function startGame() { document.getElementById('menu-screen').classList.remove('active'); document.getElementById('game-screen').classList.add('active'); initStage(); if(gameLoopInterval) clearInterval(gameLoopInterval); gameLoopInterval = setInterval(updateGame, 30); }",
-    "function initStage() { enemiesContainer.innerHTML = ''; enemiesList = []; stageIndicator.innerText = 'FASE: ' + currentStage;",
-    "if (currentStage < totalStages) { bossSf.style.display = 'none'; createEnemy(450, 2); createEnemy(680, -2); } else { stageIndicator.innerText = 'CENÁRIO FINAL: BOSS SF'; bossSf.style.display = 'block'; } }",
-    "function createEnemy(startX, speed) { const enemyEl = document.createElement('div'); enemyEl.className = 'enemy'; enemyEl.style.left = startX + 'px'; enemiesContainer.appendChild(enemyEl); enemiesList.push({ element: enemyEl, x: startX, speed: speed, minX: startX - 130, maxX: startX + 130 }); }",
-    "function updateGame() { enemiesList.forEach(enemy => { enemy.x += enemy.speed; if (enemy.x > enemy.maxX || enemy.x < enemy.minX || enemy.x > 730 || enemy.x < 0) { enemy.speed *= -1; } enemy.element.style.left = enemy.x + 'px';",
-    "if (Math.abs(playerX - enemy.x) < 45 && playerY < 120) { if (isAttacking) { enemy.element.remove(); enemiesList = enemiesList.filter(e => e !== enemy); } else if (!isJumping) { playerX = 50; player.style.left = playerX + 'px'; } } });",
-    "if (playerX >= 730) { if (currentStage < totalStages) { currentStage++; playerX = 50; player.style.left = playerX + 'px'; initStage(); } else { playerX = 730; player.style.left = playerX + 'px'; } } }",
-    "function movePlayer(offset) { if (isAttacking) return; playerX += offset; if (playerX < 0) playerX = 0; if (playerX > 730) playerX = 730; player.style.left = playerX + 'px'; }",
-    "function jumpPlayer() { if (isJumping) return; isJumping = true; let baseFloor = playerY; let targetHeight = baseFloor + 140;",
-    "let upInterval = setInterval(() => { playerY += 8; player.style.bottom = playerY + 'px'; if (playerY >= targetHeight) { clearInterval(upInterval);",
-    "let downInterval = setInterval(() => { playerY -= 8; player.style.bottom = playerY + 'px'; if (playerY <= 55) { clearInterval(downInterval); playerY = 55; player.style.bottom = playerY + 'px'; isJumping = false; } }, 15); } }, 15); }",
-    "function attackPlayer() { if (isAttacking) return; isAttacking = true; player.style.filter = 'drop-shadow(0 0 15px #ff1a1a) brightness(1.4)';",
-    "if (currentStage === totalStages && playerX >= 520) { bossSf.style.filter = 'hue-rotate(90deg) brightness(2)'; setTimeout(() => { bossSf.style.display = 'none'; alert('Vitória! Você derrotou a Boss SF!'); currentStage = 1; playerX = 100; player.style.left = playerX + 'px'; document.getElementById('game-screen').classList.remove('active'); document.getElementById('menu-screen').classList.add('active'); }, 300); }",
-    "setTimeout(() => { player.style.filter = 'none'; isAttacking = false; }, 150); }",
-    "window.addEventListener('keydown', function(event) { if(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) { event.preventDefault(); }",
-    "if (!document.getElementById('game-screen').classList.contains('active')) { if (event.code === 'Enter' || event.code === 'Space') { startGame(); } return; }",
-    "switch(event.code) { case 'KeyA': case 'ArrowLeft': movePlayer(-25); break; case 'KeyD': case 'ArrowRight': movePlayer(25); break; case 'KeyW': case 'ArrowUp': jumpPlayer(); break; case 'Space': attackPlayer(); break; } });",
-    "</script></body></html>"
-]
+game_html = f"""
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=MedievalSharp&display=swap" rel="stylesheet">
+    <style>
+        body {{ margin: 0; padding: 0; background-color: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; user-select: none; }}
+        #game-window {{ width: 800px; height: 600px; position: relative; border: 4px solid #4a0000; border-radius: 10px; box-shadow: 0 0 40px rgba(139, 0, 0, 0.6); overflow: hidden; background-color: #000; }}
+        .screen {{ width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; }}
+        .active {{ display: block; }}
+        
+        #menu-screen {{ background-image: url('{img_capa}'); background-size: cover; background-position: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
+        .menu-box {{ background: rgba(0, 0, 0, 0.85); padding: 40px 60px; border: 2px solid #8b0000; border-radius: 10px; text-align: center; box-shadow: 0 0 30px #000; }}
+        h1 {{ font-family: 'Creepster', cursive; font-size: 70px; color: #ff1a1a; text-shadow: 3px 3px 0 #000, 0 0 20px #ff0000; margin: 0 0 30px 0; letter-spacing: 5px; }}
+        .btn-start {{ font-family: 'MedievalSharp', cursive; font-size: 28px; padding: 15px 40px; background: #4a0000; color: #fff; border: 2px solid #ff1a1a; cursor: pointer; border-radius: 5px; transition: 0.3s; box-shadow: 0 0 15px rgba(255,0,0,0.5); }}
+        .btn-start:hover {{ background: #8b0000; transform: scale(1.05); }}
 
-game_html = "".join(partes_html)
+        #game-screen {{ background-image: url('{img_cena1}'); background-size: cover; background-position: center; transition: background-image 1s ease-in-out; }}
+        #floor {{ position: absolute; bottom: 0; width: 100%; height: 60px; background: rgba(0, 0, 0, 0.6); border-top: 2px solid #333; }}
+        
+        #ui-layer {{ position: absolute; top: 20px; left: 20px; z-index: 100; font-family: 'MedievalSharp', cursive; font-size: 24px; color: #fff; text-shadow: 2px 2px 4px #000; }}
+        #hearts-container {{ display: flex; gap: 5px; margin-bottom: 10px; font-size: 30px; }}
+        #score-display {{ color: #ff1a1a; font-weight: bold; }}
+        #stage-banner {{ position: absolute; top: 150px; width: 100%; text-align: center; font-family: 'Creepster', cursive; font-size: 40px; color: #ff00ff; text-shadow: 2px 2px 0 #000; display: none; z-index: 100; }}
+        
+        /* Personagens e Inimigos */
+        #player-inara {{ width: 70px; height: 110px; background-image: url('{img_inara}'); background-size: contain; background-repeat: no-repeat; background-position: bottom; position: absolute; bottom: 60px; z-index: 21; transition: filter 0.2s; }}
+        #player-queen {{ width: 70px; height: 110px; background-image: url('{img_queen}'); background-size: contain; background-repeat: no-repeat; background-position: bottom; position: absolute; bottom: 60px; z-index: 20; display: none; transition: filter 0.2s; }}
+        
+        .skeleton {{ width: 65px; height: 95px; background-image: url('{img_esqueleto}'); background-size: contain; background-repeat: no-repeat; background-position: bottom; position: absolute; bottom: 60px; z-index: 15; }}
+        
+        /* Projéteis */
+        .knife {{ width: 40px; height: 15px; background-image: url('{img_faca}'); background-size: cover; position: absolute; z-index: 25; border-radius: 2px; box-shadow: 0 0 5px #fff; }}
+        .leaf {{ width: 30px; height: 30px; background-image: url('{img_folha}'); background-size: cover; position: absolute; z-index: 25; border-radius: 50%; box-shadow: 0 0 8px #0f0; }}
+        
+        /* Botão de ataque na tela */
+        #action-btn-container {{ position: absolute; bottom: 20px; right: 20px; z-index: 100; }}
+        #attack-btn {{ font-family: 'MedievalSharp', cursive; font-size: 22px; padding: 15px 30px; background: linear-gradient(135deg, #4a0000, #1a0000); color: #fff; border: 2px solid #ff1a1a; border-radius: 50px; cursor: pointer; box-shadow: 0 0 15px rgba(255,0,0,0.8); user-select: none; transition: transform 0.1s; }}
+        #attack-btn:active {{ transform: scale(0.9); }}
+
+        #game-over {{ display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; flex-direction: column; align-items: center; justify-content: center; }}
+    </style>
+</head>
+<body>
+    <div id="game-window">
+        <div id="menu-screen" class="screen active">
+            <div class="menu-box">
+                <h1>INA GAME</h1>
+                <button class="btn-start" onclick="initGame()">INICIAR DUELO</button>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div id="ui-layer">
+                <div id="hearts-container"></div>
+                <div id="score-display">Esqueletos Derrotados: <span id="score">0</span></div>
+            </div>
+            
+            <div id="stage-banner">QUEEN OF BONES SE JUNTA À BATALHA!</div>
+            
+            <div id="player-queen"></div>
+            <div id="player-inara"></div>
+            
+            <div id="action-btn-container">
+                <button id="attack-btn" onmousedown="throwWeapons()" ontouchstart="throwWeapons()">⚔️ GOLPEAR</button>
+            </div>
+            
+            <div id="floor"></div>
+            <div id="game-over">
+                <h1>FIM DE JOGO</h1>
+                <button class="btn-start" onclick="location.reload()">TENTAR NOVAMENTE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SISTEMA DE ÁUDIO ---
+        const actx = new (window.AudioContext || window.webkitAudioContext)();
+        let bgmInterval;
+
+        function playTone(freq, type, duration, vol) {{
+            if(actx.state === 'suspended') actx.resume();
+            const osc = actx.createOscillator();
+            const gain = actx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, actx.currentTime);
+            gain.gain.setValueAtTime(vol, actx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(actx.destination);
+            osc.start();
+            osc.stop(actx.currentTime + duration);
+        }}
+
+        function playThrowSound() {{ playTone(600, 'square', 0.1, 0.1); }}
+        function playHitSound() {{ playTone(150, 'sawtooth', 0.2, 0.2); }}
+        function playDamageSound() {{ playTone(100, 'square', 0.4, 0.3); playTone(80, 'sawtooth', 0.5, 0.3); }}
+        
+        function startBGM() {{
+            const notes = [220, 246, 261, 293, 329, 261, 293, 220];
+            let step = 0;
+            bgmInterval = setInterval(() => {{
+                playTone(notes[step], 'triangle', 0.3, 0.05);
+                step = (step + 1) % notes.length;
+            }}, 400);
+        }}
+
+        // --- LÓGICA DO JOGO ---
+        let stage = 1;
+        let pX = 150, pY = 60, pVelocityY = 0, isJumping = false;
+        let hp = 10; // 5 corações inteiros
+        let score = 0;
+        let isInvincible = false;
+        let gameLoop, spawnIntervalTime = 2000, skeletonSpawner;
+        
+        const inaraEl = document.getElementById('player-inara');
+        const queenEl = document.getElementById('player-queen');
+        const gameScreen = document.getElementById('game-screen');
+        const heartsContainer = document.getElementById('hearts-container');
+        
+        let skeletons = [];
+        let projectiles = [];
+
+        function initGame() {{
+            document.getElementById('menu-screen').classList.remove('active');
+            gameScreen.classList.add('active');
+            startBGM();
+            updateHearts();
+            updatePlayerPositions();
+            
+            gameLoop = setInterval(update, 30);
+            scheduleSpawn();
+        }}
+
+        function updateHearts() {{
+            heartsContainer.innerHTML = '';
+            let fullHearts = Math.floor(hp / 2);
+            let halfHeart = hp % 2 !== 0;
+            let emptyHearts = 5 - Math.ceil(hp / 2);
+
+            for(let i=0; i<fullHearts; i++) heartsContainer.innerHTML += '❤️';
+            if(halfHeart) heartsContainer.innerHTML += '💔';
+            for(let i=0; i<emptyHearts; i++) heartsContainer.innerHTML += '🖤';
+
+            if(hp <= 0) gameOver();
+        }}
+
+        // Controles apenas pelas setas e espaço
+        window.addEventListener('keydown', (e) => {{
+            if(hp <= 0) return;
+            if(e.code === 'ArrowLeft') {{ pX -= 30; if(pX < 50) pX = 50; }} // Limite para caber a Queen atrás
+            if(e.code === 'ArrowRight') {{ pX += 30; if(pX > 730) pX = 730; }}
+            if(e.code === 'ArrowUp' && !isJumping) {{ isJumping = true; pVelocityY = 20; }}
+            if(e.code === 'Space') {{ e.preventDefault(); throwWeapons(); }}
+        }});
+
+        function throwWeapons() {{
+            if(hp <= 0) return;
+            playThrowSound();
+            
+            // Faca da Inara
+            const knife = document.createElement('div');
+            knife.className = 'knife';
+            knife.style.left = (pX + 50) + 'px';
+            knife.style.bottom = (pY + 40) + 'px';
+            gameScreen.appendChild(knife);
+            projectiles.push({{ el: knife, x: pX + 50, y: pY + 40 }});
+
+            // Folha da Queen of Bones (Apenas na Fase 2)
+            if(stage === 2) {{
+                const leaf = document.createElement('div');
+                leaf.className = 'leaf';
+                leaf.style.left = (pX) + 'px'; // Atira um pouco atrás da Inara
+                leaf.style.bottom = (pY + 65) + 'px'; // Um pouco mais alto
+                gameScreen.appendChild(leaf);
+                projectiles.push({{ el: leaf, x: pX, y: pY + 65 }});
+            }}
+        }}
+
+        function scheduleSpawn() {{
+            skeletonSpawner = setTimeout(() => {{
+                spawnSkeleton();
+                if(stage === 1 && spawnIntervalTime > 800) spawnIntervalTime -= 50; 
+                scheduleSpawn();
+            }}, spawnIntervalTime);
+        }}
+
+        function spawnSkeleton() {{
+            const skel = document.createElement('div');
+            skel.className = 'skeleton';
+            skel.style.left = '800px';
+            gameScreen.appendChild(skel);
+            skeletons.push({{ el: skel, x: 800 }});
+        }}
+
+        function checkStageTransition() {{
+            if(score >= 10 && stage === 1) {{
+                stage = 2;
+                gameScreen.style.backgroundImage = "url('{img_cena2}')";
+                queenEl.style.display = 'block';
+                spawnIntervalTime = 600; // Dobra a quantidade de inimigos
+                
+                const banner = document.getElementById('stage-banner');
+                banner.style.display = 'block';
+                setTimeout(() => banner.style.display = 'none', 3000);
+            }}
+        }}
+
+        function updatePlayerPositions() {{
+            inaraEl.style.left = pX + 'px';
+            inaraEl.style.bottom = pY + 'px';
+            
+            if(stage === 2) {{
+                // Queen of Bones segue a Inara um pouco atrás
+                queenEl.style.left = (pX - 60) + 'px'; 
+                queenEl.style.bottom = pY + 'px';
+            }}
+        }}
+
+        function update() {{
+            if(isJumping) {{
+                pY += pVelocityY;
+                pVelocityY -= 1.5; 
+                if(pY <= 60) {{ pY = 60; isJumping = false; pVelocityY = 0; }}
+            }}
+            updatePlayerPositions();
+            checkStageTransition();
+
+            // Atualiza Projéteis (Facas e Folhas)
+            for(let i = projectiles.length - 1; i >= 0; i--) {{
+                let p = projectiles[i];
+                p.x += 15; 
+                p.el.style.left = p.x + 'px';
+                
+                if(p.x > 800) {{ p.el.remove(); projectiles.splice(i, 1); continue; }}
+                
+                for(let j = skeletons.length - 1; j >= 0; j--) {{
+                    let s = skeletons[j];
+                    if(Math.abs(p.x - s.x) < 40 && Math.abs(p.y - 60) < 60) {{
+                        playHitSound();
+                        s.el.remove();
+                        skeletons.splice(j, 1);
+                        p.el.remove();
+                        projectiles.splice(i, 1);
+                        score++;
+                        document.getElementById('score').innerText = score;
+                        break;
+                    }}
+                }}
+            }}
+
+            // Atualiza Esqueletos
+            for(let i = skeletons.length - 1; i >= 0; i--) {{
+                let s = skeletons[i];
+                if(s.x > Math.max(10, skeletons.indexOf(s) * 30)) {{
+                    s.x -= (stage === 2 ? 4 : 3); // Esqueletos ficam mais rápidos na fase 2
+                }}
+                s.el.style.left = s.x + 'px';
+
+                if(!isInvincible && Math.abs(pX - s.x) < 40 && pY < 120) {{
+                    takeDamage();
+                }}
+            }}
+        }}
+
+        function takeDamage() {{
+            hp -= 1; 
+            updateHearts();
+            playDamageSound();
+            isInvincible = true;
+            
+            inaraEl.style.filter = 'brightness(2) sepia(1) hue-rotate(300deg)';
+            if(stage === 2) queenEl.style.filter = 'brightness(2) sepia(1) hue-rotate(300deg)';
+            
+            pX -= 60; if(pX < 60) pX = 60;
+
+            setTimeout(() => {{
+                isInvincible = false;
+                inaraEl.style.filter = 'none';
+                queenEl.style.filter = 'none';
+            }}, 1000); 
+        }}
+
+        function gameOver() {{
+            clearInterval(gameLoop);
+            clearTimeout(skeletonSpawner);
+            clearInterval(bgmInterval);
+            document.getElementById('game-over').style.display = 'flex';
+        }}
+    </script>
+</body>
+</html>
+"""
+
 components.html(game_html, width=800, height=600)
